@@ -1,16 +1,16 @@
 import os
 import pygame
 
-modelname = "racer_8state_5" + ".zip"
+modelname = "racer_9state_3" + ".zip"
 
 # Window CONFIGURE
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 550, 550
 # TIME_LIMIT    = 60  #How many seconds will it take for one episode?
 
 # Model.learn - Hyperparameter Configure
 total_timesteps = 150000 #300k
 learning_rate  = 0.0005 #0.004 (4*10^-3) recommended
-ent_coef       = 0.05 
+ent_coef       = 0.01
 gamma          = 0.99 
 gae_lambda     = 0.95
 max_grad_norm  = 0.5
@@ -51,8 +51,8 @@ def get_updated_Model_Save_Path(modelname):
 
 
 
-tensorboard_log = "./DroneLog/"
-tensorboard_sub_folder = 'new_training' + str(total_timesteps/1000) + "k"
+tensorboard_log = None      # "./DroneLog/"
+tensorboard_sub_folder = None       # 'new_training' + str(total_timesteps/1000) + "k"
 
 # Display and asset Settings & Function
 # BACKGROUND = "assets/sky.png"

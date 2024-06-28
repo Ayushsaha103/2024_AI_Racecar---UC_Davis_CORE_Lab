@@ -29,18 +29,22 @@ max_grad_norm   = Constants.max_grad_norm
 total_timesteps = Constants.total_timesteps
 
 try:
-    # In addition to PPO, A2C and DQN are also viable options.
-    model = PPO('MlpPolicy',
-                env,
-                learning_rate   = learning_rate,
-                ent_coef        = ent_coef, 
-                gamma           = gamma, 
-                gae_lambda      = gae_lambda,
-                max_grad_norm   = max_grad_norm,
-                verbose         = 0, 
-                tensorboard_log = tensorboard_log_path
-                )
-    model = PPO.load(Constants.Orig_Model_Save_Path, env=env, ent_coef = 0.05)
+    # # # In addition to PPO, A2C and DQN are also viable options.
+    # model = PPO('MlpPolicy',
+    #             env,
+    #             learning_rate   = learning_rate,
+    #             ent_coef        = ent_coef, 
+    #             gamma           = gamma, 
+    #             gae_lambda      = gae_lambda,
+    #             max_grad_norm   = max_grad_norm,
+    #             verbose         = 0,
+    #             tensorboard_log = None
+    #             )
+    model = PPO.load(Constants.Orig_Model_Save_Path,
+        env=env,
+        ent_coef = 0.14,
+        tensorboard_log = None
+    )
     
     startTime = time.time()
     print("~~~~~~~~~~~~ STARTING TRAINING... ~~~~~~~~~~~~")

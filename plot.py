@@ -7,6 +7,69 @@ import pdb
 def transform_point_coor(p, x_trans, y_trans, zoom):
     return [p[0]*zoom+x_trans, p[1]*zoom+y_trans]
 
+
+def saveTrajectory(map, x, x_glob, u, stringTitle):
+    Points = int(np.floor(10 * (map.PointAndTangent[-1, 3] + map.PointAndTangent[-1, 4])))
+    Points1 = np.zeros((Points, 2))
+    Points2 = np.zeros((Points, 2))
+    Points0 = np.zeros((Points, 2))
+    for i in range(0, int(Points)):
+        Points1[i, :] = map.getGlobalPosition(i * 0.1, map.halfWidth)
+        Points2[i, :] = map.getGlobalPosition(i * 0.1, -map.halfWidth)
+        Points0[i, :] = map.getGlobalPosition(i * 0.1, 0)
+
+    plt.figure()
+    plt.plot(map.PointAndTangent[:, 0], map.PointAndTangent[:, 1], 'o')
+    plt.plot(Points0[:, 0], Points0[:, 1], '--')
+    plt.plot(Points1[:, 0], Points1[:, 1], '-b')
+    plt.plot(Points2[:, 0], Points2[:, 1], '-b')
+    plt.plot(x_glob[:, 4], x_glob[:, 5], '-r')
+    plt.title(stringTitle)
+
+    try: plt.savefig("./results_data/trajectory_pic.jpg")
+    except: pass
+    plt.close()
+
+    plt.figure()
+    plt.subplot(711)
+    plt.plot(x[:, 4], x[:, 0], '-o')
+    plt.ylabel('vx')
+    plt.subplot(712)
+    plt.plot(x[:, 4], x[:, 1], '-o')
+    plt.ylabel('vy')
+    plt.subplot(713)
+    plt.plot(x[:, 4], x[:, 2], '-o')
+    plt.ylabel('wz')
+    plt.subplot(714)
+    plt.plot(x[:, 4], x[:, 3], '-o')
+    plt.ylabel('epsi')
+    plt.subplot(715)
+    plt.plot(x[:, 4], x[:, 5], '-o')
+    plt.ylabel('ey')
+    # plt.subplot(716)
+    # plt.plot(x[:, 4], u[:, 0], '-o')
+    # plt.ylabel('steering')
+    # plt.subplot(717)
+    # plt.plot(x[:, 4], u[:, 1], '-o')
+    # plt.ylabel('acc')
+    plt.title(stringTitle)
+    
+    try: plt.savefig("./results_data/trajectory_info.jpg")
+    except: pass
+    plt.close()
+    
+def SaveGameTrajectory(map_, xcl, xcl_glob, u_cl):
+    # import pdb; pdb.set_trace()
+    xF = [np.array(xcl[-1]) - np.array([0, 0, 0, 0, map_.TrackLength, 0]), np.array(xcl_glob[-1])]
+    xcl.pop()
+    xcl_glob.pop()
+
+    xcl, xcl_glob = np.array(xcl), np.array(xcl_glob)
+    u_cl = np.array(u_cl)
+
+    saveTrajectory(map_, xcl, xcl_glob, xF, 'PID')
+    print("~~~~~~~~~~~~ Saved trajectory! ~~~~~~~~~~~~")
+
 def plotTrajectory(map, x, x_glob, u, stringTitle):
     Points = int(np.floor(10 * (map.PointAndTangent[-1, 3] + map.PointAndTangent[-1, 4])))
     Points1 = np.zeros((Points, 2))
