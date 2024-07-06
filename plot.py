@@ -26,7 +26,7 @@ def saveTrajectory(map, x, x_glob, u, stringTitle):
     plt.plot(x_glob[:, 4], x_glob[:, 5], '-r')
     plt.title(stringTitle)
 
-    try: plt.savefig("./results_data/trajectory_pic_2.jpg")
+    try: plt.savefig("./results_data/trajectory_pic.jpg")
     except: pass
     plt.close()
 
