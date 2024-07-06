@@ -26,7 +26,7 @@ def saveTrajectory(map, x, x_glob, u, stringTitle):
     plt.plot(x_glob[:, 4], x_glob[:, 5], '-r')
     plt.title(stringTitle)
 
-    try: plt.savefig("./results_data/trajectory_pic.jpg")
+    try: plt.savefig("./results_data/trajectory_pic_2.jpg")
     except: pass
     plt.close()
 
@@ -67,7 +67,7 @@ def SaveGameTrajectory(map_, xcl, xcl_glob, u_cl):
     xcl, xcl_glob = np.array(xcl), np.array(xcl_glob)
     u_cl = np.array(u_cl)
 
-    saveTrajectory(map_, xcl, xcl_glob, xF, 'PID')
+    saveTrajectory(map_, xcl, xcl_glob, xF, 'Trajectory Plot')
     print("~~~~~~~~~~~~ Saved trajectory! ~~~~~~~~~~~~")
 
 def plotTrajectory(map, x, x_glob, u, stringTitle):

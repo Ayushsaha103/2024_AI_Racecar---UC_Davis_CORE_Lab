@@ -39,9 +39,10 @@ class droneEnv(gym.Env):
         self.trainstep = 0
         self.uPred = np.zeros([1,2])
 
-        self.numLaps = 3
+        self.numLaps = 2
         self.map = Map(0.5)
-        self.sim = Simulator(self.map)
+        self.dt = 0.1
+        self.sim = Simulator(self.map, self.dt)
         self.visualizer = Data_Visualizer()
 
         # GYM CONFIGURE
@@ -64,7 +65,7 @@ class droneEnv(gym.Env):
             SaveGameTrajectory(self.map, self.xcl, self.xcl_glob, self.u_cl)
         
         # DECIDE WHEN TO SAVE GAME TRAJECTORY
-        skip = 10
+        skip = 1
         self.save_game_trajectory = False
         if self.game_cnt > 0 and self.game_cnt % skip == 0:
             self.save_game_trajectory = True
@@ -75,9 +76,13 @@ class droneEnv(gym.Env):
         self.u_cl = []
 
         self.reward = 0
-        self.prev_s = -100
+        self.prev_s = -0.0000001
+        self.prev_delta = 0
+        self.best_laptime = 1000000
+        self.cur_lap = 1
 
-        self.x0 = np.array([0.5, 0, 0, 0, 0, 0])
+        self.v_const = 1.2
+        self.x0 = np.array([0.02, 0, 0, 0, 0, 0])
         self.xS = [self.x0.copy(), self.x0.copy()]
         self.prev_XYpsi = [0,0,0]
         
@@ -114,7 +119,7 @@ class droneEnv(gym.Env):
         self.render()
         self.reward = 0.0
 
-        vt = 0.9        # self.vt
+        vt = self.v_const        # self.vt
         x0 = self.xS[0]
         # self.uPred[0, 0] = - 0.6 * x0[5] - 0.9 * x0[3] + np.max([-0.9, np.min([np.random.randn() * 0.25, 0.9])])
         self.uPred[0, 1] = 1.5 * (vt - x0[0]) + np.max([-0.2, np.min([np.random.randn() * 0.10, 0.2])])
@@ -131,12 +136,20 @@ class droneEnv(gym.Env):
                 # update position
                 self.xS[0], self.xS[1] = self.sim.dynModel(self.xS[0], self.xS[1], self.uPred[0,:].copy())
 
-                # game termination
+                # get state vars
                 ey = self.xS[0][5]
                 s = self.xS[0][4]
                 epsi = self.xS[0][3]
                 v = math.sqrt(self.xS[0][0]**2 + self.xS[0][1]**2)
+                ds_dt = (s - self.prev_s) / self.dt
+                d_delta_dt = (delta - self.prev_delta) / self.dt
                 # ephi = self.xS[0][3]
+                 
+                # ADD DATA TO xcl, xcl_glob, ucl (conditionally)
+                if self.save_game_trajectory:
+                    self.xcl.append(self.xS[0])
+                    self.xcl_glob.append(self.xS[1])
+                    self.u_cl.append(self.uPred[0,:].copy())
                 
                 # TERMINATION CONDITIONS
                 if abs(ey) >= self.map.halfWidth: # or abs(ephi) >= np.radians(45):
@@ -145,25 +158,38 @@ class droneEnv(gym.Env):
                     return self.get_obs(), -15, done, self.info
                     # action = int(action)
                 elif s < self.prev_s:
-                    print("WRONG BEHAVIOR " + str(self.game_cnt))
+                    print("BACKWARDS MOTION BEHAVIOR ON GAME " + str(self.game_cnt))
                     done = True
                     return self.get_obs(), -15, done, self.info
                     # action = int(action)
                 
-                # AUTO-RESET after successful 2-lap completion
-                if s > 20*self.numLaps:
-                    print("SUCCESSFUL FINISH ON GAME " + str(self.game_cnt) + ", AV. LAPTIME: " + str(round((time.time() - self.game_start_time) / self.numLaps, 2)))
-                    done = True
-                    return self.get_obs(), 0, done, self.info
 
-                # ADD DATA TO xcl, xcl_glob, ucl (conditionally)
-                if self.save_game_trajectory:
-                    self.xcl.append(self.xS[0])
-                    self.xcl_glob.append(self.xS[1])
-                    self.u_cl.append(self.uPred[0,:].copy())
+                # REWARD FOR LAP COMPLETION
+                for i in range(self.cur_lap, self.numLaps):
+                    if s > 20 * i:
+                        # reward for optimal laptime
+                        av_laptime = (time.time() - self.game_start_time) / self.cur_lap
+                        if av_laptime < self.best_laptime:
+                            self.reward += 15
+                            self.best_laptime = av_laptime
+
+                        self.cur_lap += 1
+                        self.reward += 10 - av_laptime
+                        break
+                    else: break
+
+                # REWARD FOR GAME COMPLETION
+                if s > 20*self.numLaps:
+                    av_laptime = (time.time() - self.game_start_time) / self.numLaps
+                    print("SUCCESSFUL FINISH ON GAME " + str(self.game_cnt) + ", AV. LAPTIME: " + str(round(av_laptime, 2)))
+                    done = True
+                    # # reward for game completion
+                    # self.reward += 20
+                    return self.get_obs(), self.reward, done, self.info
+
             except:
                 # import pdb; pdb.set_trace()
-                print("BEHAVIOR ISSUE " + str(self.game_cnt))
+                print("SOME KIND OF BEHAVIOR ISSUE ON GAME " + str(self.game_cnt))
                 done = True
                 return self.get_obs(), -15, done, self.info
             # print([self.trainstep, self.uPred])
@@ -173,7 +199,9 @@ class droneEnv(gym.Env):
             # rewards = [0.01, s*0.04, -abs(epsi)]
             # rewards = [0.01, s*5, vel*0.3]
             # rewards = [0.01, -abs(epsi)]
-            rewards = [0.01, -abs(epsi), -abs(ey)]
+
+            st_rw = steering_reward_continuous_normalized(delta, d_delta_dt, self.prev_delta, self.dt)
+            rewards = [0.01*s, 2*ds_dt]     # , 5*st_rw]
 
             # vt = 0.8        # self.vt
             # x0 = self.xS[0]
@@ -184,6 +212,7 @@ class droneEnv(gym.Env):
             
             self.reward += np.sum(rewards)
             self.prev_s = s
+            self.prev_delta = self.uPred[0,0]
 
             self.s_total = max(self.s_total, s)
             # self.reward_total += self.reward

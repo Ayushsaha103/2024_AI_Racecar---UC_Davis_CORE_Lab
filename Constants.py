@@ -1,14 +1,17 @@
 import os
 import pygame
 
-modelname = "racer_9state_3" + ".zip"
+# racer_9state_3
+# racer_9state_9
+# racer_9state_10
+modelname = "racer_9state_13" + ".zip"
 
 # Window CONFIGURE
 WIDTH, HEIGHT = 550, 550
 # TIME_LIMIT    = 60  #How many seconds will it take for one episode?
 
 # Model.learn - Hyperparameter Configure
-total_timesteps = 150000 #300k
+total_timesteps = 29000 #300k
 learning_rate  = 0.0005 #0.004 (4*10^-3) recommended
 ent_coef       = 0.01
 gamma          = 0.99 

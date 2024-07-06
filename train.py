@@ -9,12 +9,14 @@ import logging
 
 import Constants
 
-# from stable_baselines3 import A2C #PPO, DQN also can be used 
 from stable_baselines3 import PPO
 # from stable_baselines3 import DQN
 
+
 import time
 from env import droneEnv
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 env = droneEnv()
 
 tensorboard_log_path   = Constants.tensorboard_log
@@ -27,6 +29,65 @@ gae_lambda      = Constants.gae_lambda
 max_grad_norm   = Constants.max_grad_norm
 
 total_timesteps = Constants.total_timesteps
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# import sys
+# import select
+
+# def check_for_user_input():
+#     i, o, e = select.select([sys.stdin], [], [], 0.0001)
+#     for s in i:
+#         if s == sys.stdin:
+#             input_line = sys.stdin.readline().strip()
+#             return input_line
+#     return None
+
+# def save_model(model, startTime):
+#     print("Training Completed in: " + str(round(time.time() - startTime, 2)) + " [s]")
+#     New_Model_Save_Path = Constants.get_updated_Model_Save_Path(Constants.modelname)
+#     model.save(New_Model_Save_Path)
+    
+#     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#     logger = logging.getLogger(__name__)
+#     logger.info(f'Model has trained and Saved in -> "{New_Model_Save_Path}" <- ')
+
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# model = PPO.load(Constants.Orig_Model_Save_Path,
+#         env=env,
+#         ent_coef = 0.14,
+#         tensorboard_log = None
+#     )
+# startTime = time.time()
+# print("~~~~~~~~~~~~ STARTING TRAINING... ~~~~~~~~~~~~")
+
+# try:
+#     for _ in range(10000):
+#         # Train the model
+
+#         model.learn(total_timesteps = total_timesteps, 
+#                     callback        = None, 
+#                     log_interval    = 1, 
+#                     tb_log_name     = tensorboard_sub_folder, 
+#                     reset_num_timesteps=True, 
+#                     progress_bar=False)
+    
+#         # Check for user input
+#         user_input = check_for_user_input()
+#         if user_input is not None:
+#             if user_input == "s":
+#                 save_model(model, startTime)
+#             elif user_input == "q":
+#                 print("Training terminated by user.")
+#                 save_model(model, startTime)
+#                 break
+# except KeyboardInterrupt:
+#     print("Training interrupted by user.")
+#     save_model(model, startTime)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 try:
     # # # In addition to PPO, A2C and DQN are also viable options.
@@ -91,7 +152,6 @@ try:
             If the magnitude of the gradients exceeds this value, they are scaled down to ensure they do not become too large.
     
     """
-    
     
 except Exception as e:
     exc_type, exc_obj, tb = sys.exc_info()
